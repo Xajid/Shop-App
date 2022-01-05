@@ -1,6 +1,6 @@
 # shop_app
 
-A new Flutter project.
+Flutter e-commerce app using flutter and firebase using provider package
 
 ## Getting Started
 
