@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/models/http_exceptions.dart';
 import 'dart:convert';
 import 'package:shop_app/providers/product.dart';
 import 'package:http/http.dart' as http;
@@ -67,6 +68,9 @@ class Products with ChangeNotifier {
           'https://shop-app-b3e6c-default-rtdb.firebaseio.com/products.json'));
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
       final List<Product> loadedProducts = [];
+      if (extractedData == null) {
+        return;
+      }
       extractedData.forEach((prodId, prodData) {
         loadedProducts.add(Product(
             id: prodId,
@@ -110,14 +114,35 @@ class Products with ChangeNotifier {
     }
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((prod) => prod.id == id);
+  Future<void> deleteProduct(String id) async {
+    final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+    var existingProduct = _items[existingProductIndex];
+
+    _items.removeAt(existingProductIndex);
     notifyListeners();
+    final response = await http.delete(Uri.parse(
+        'https://shop-app-b3e6c-default-rtdb.firebaseio.com/products/$id.json'));
+
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+      throw HttpException('Could not delete product');
+    }
+    existingProduct = null;
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if (prodIndex >= 0) {
+      await http.patch(
+          Uri.parse(
+              'https://shop-app-b3e6c-default-rtdb.firebaseio.com/products/$id.json'),
+          body: json.encode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'price': newProduct.price,
+            'imageUrl': newProduct.imageUrl,
+          }));
       _items[prodIndex] = newProduct;
       notifyListeners();
     } else {

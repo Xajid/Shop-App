@@ -83,12 +83,8 @@ class _EditProductState extends State<EditProduct> {
     });
 
     if (_editedProduct.id != null) {
-      Provider.of<Products>(context, listen: false)
+      await Provider.of<Products>(context, listen: false)
           .updateProduct(_editedProduct.id, _editedProduct);
-      setState(() {
-        isLoading = false;
-      });
-      Navigator.of(context).pop();
     } else {
       try {
         await Provider.of<Products>(context, listen: false)
@@ -107,13 +103,18 @@ class _EditProductState extends State<EditProduct> {
                         child: Text('Okay'))
                   ],
                 ));
-      } finally {
-        setState(() {
-          isLoading = false;
-        });
-        Navigator.of(context).pop();
       }
+      ////finally {
+      //   setState(() {
+      //     isLoading = false;
+      //   });
+      //   Navigator.of(context).pop();
+      // }
     }
+    setState(() {
+      isLoading = false;
+    });
+    Navigator.of(context).pop();
   }
 
   @override
